@@ -45,10 +45,10 @@ public class MeetingController : ControllerBase
     [SwaggerOperation(
         Summary = "Get meeting by id",
         Description = "Returns meeting details including document for the given id")]
-    [SwaggerResponse(200, "Success", typeof(Meeting))]
+    [SwaggerResponse(200, "Success", typeof(MeetingResponse))]
     [SwaggerResponse(404, "Meeting not found")]
     [SwaggerResponse(401, "Unauthorized")]
-    public async Task<ActionResult<Meeting>> GetById(
+    public async Task<ActionResult<MeetingResponse>> GetById(
         [SwaggerParameter(Description = "The unique identifier of the meeting", Required = true)] int id)
     {
         try

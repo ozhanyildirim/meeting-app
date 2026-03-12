@@ -88,6 +88,8 @@ builder.Services.AddScoped<MeetingCleanupService>();
 
 var app = builder.Build();
 
+Console.WriteLine(builder.Configuration["MailSettings:Email"]);
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

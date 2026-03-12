@@ -33,7 +33,7 @@ public class MeetingService : IMeetingService
             .ToListAsync();
     }
 
-    public async Task<Meeting> GetByIdAsync(int id, int userId)
+    public async Task<MeetingResponse> GetByIdAsync(int id, int userId)
     {
         var meeting = await _db.Meetings
             .Include(m => m.Document)
@@ -43,7 +43,25 @@ public class MeetingService : IMeetingService
         if (meeting == null)
             throw new Exception("Toplantı bulunamadı");
 
-        return meeting;
+        return new MeetingResponse
+        {
+            Id = meeting.Id,
+            Title = meeting.Title,
+            StartDate = meeting.StartDate,
+            EndDate = meeting.EndDate,
+            Description = meeting.Description,
+            IsCancelled = meeting.IsCancelled,
+            CancelledAt = meeting.CancelledAt,
+            Document = meeting.Document == null ? null : new DocumentResponseDto
+            {
+                Id = meeting.Document.Id,
+                FileName = meeting.Document.FileName,
+                FileType = meeting.Document.FileType,
+                Base64Content = Convert.ToBase64String(meeting.Document.FileContent),
+                FileSize = meeting.Document.FileSize,
+                UploadedAt = meeting.Document.UploadedAt
+            }
+        };
     }
 
     public async Task<MeetingResponse> CreateAsync(MeetingDto dto, int userId)
@@ -63,6 +81,39 @@ public class MeetingService : IMeetingService
         _db.Meetings.Add(meeting);
         await _db.SaveChangesAsync();
 
+        // Document kaydet
+        if (dto.Document != null)
+        {
+            var ext = Path.GetExtension(dto.Document.FileName).ToLower();
+            var allowedTypes = new[] { ".jpg", ".jpeg", ".png", ".pdf", ".doc", ".docx", ".xls", ".xlsx" };
+
+            if (!allowedTypes.Contains(ext))
+                throw new Exception($"Desteklenmeyen dosya tipi: {ext}");
+
+            var base64 = dto.Document.Base64Content.Contains(",")
+                ? dto.Document.Base64Content.Split(',')[1]
+                : dto.Document.Base64Content;
+
+            byte[] fileBytes = Convert.FromBase64String(base64);
+
+            if (fileBytes.Length > 10 * 1024 * 1024)
+                throw new Exception("Dosya boyutu 10MB'dan büyük olamaz");
+
+            var document = new Document
+            {
+                FileName = dto.Document.FileName,
+                FileType = ext,
+                FileContent = fileBytes,
+                FileSize = fileBytes.Length,
+                MeetingId = meeting.Id,
+                UploadedAt = DateTime.UtcNow
+            };
+
+            _db.Documents.Add(document);
+            await _db.SaveChangesAsync();
+            meeting.Document = document;
+        }
+
         var user = await _db.Users.FindAsync(userId);
         if (user != null)
             await _emailService.SendMeetingNotificationAsync(user.Email, user.FirstName, meeting);
@@ -74,10 +125,18 @@ public class MeetingService : IMeetingService
             StartDate = meeting.StartDate,
             EndDate = meeting.EndDate,
             Description = meeting.Description,
-            IsCancelled = meeting.IsCancelled
+            IsCancelled = meeting.IsCancelled,
+            Document = meeting.Document == null ? null : new DocumentResponseDto
+            {
+                Id = meeting.Document.Id,
+                FileName = meeting.Document.FileName,
+                FileType = meeting.Document.FileType,
+                Base64Content = Convert.ToBase64String(meeting.Document.FileContent),
+                FileSize = meeting.Document.FileSize,
+                UploadedAt = meeting.Document.UploadedAt
+            }
         };
     }
-
     public async Task<MeetingResponse> UpdateAsync(int id, MeetingDto dto, int userId)
     {
         var meeting = await _db.Meetings
