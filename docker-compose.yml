@@ -1,0 +1,43 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: on-failure
+    ports:
+      - "5000:8080"
+      - "5001:443"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=MeetingAppDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;
+      - Jwt__Key=${JWT_KEY}
+      - Jwt__Issuer=MeetingApp
+      - Jwt__Audience=MeetingApp
+      - MailSettings__Host=smtp.gmail.com
+      - MailSettings__Port=587
+      - MailSettings__Email=${MAIL_EMAIL}
+      - MailSettings__Password=${MAIL_PASSWORD}
+      - MailSettings__DisplayName=MeetingApp
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    restart: always
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=${SA_PASSWORD}
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqldata:/var/lib/sqlserver/data
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P ${SA_PASSWORD} -Q \"SELECT 1\" -No || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+volumes:
+  sqldata:
