@@ -26,28 +26,18 @@ public class MeetingService : IMeetingService
                 StartDate = m.StartDate,
                 EndDate = m.EndDate,
                 Description = m.Description,
-                DocumentPath = m.DocumentPath,
+                Document = null,
                 IsCancelled = m.IsCancelled,
                 CancelledAt = m.CancelledAt
             })
             .ToListAsync();
     }
 
-    public async Task<MeetingResponse?> GetByIdAsync(int id, int userId)
+    public async Task<Meeting> GetByIdAsync(int id, int userId)
     {
         var meeting = await _db.Meetings
+            .Include(m => m.Document)
             .Where(m => m.Id == id && m.UserId == userId)
-            .Select(m => new MeetingResponse
-            {
-                Id = m.Id,
-                Title = m.Title,
-                StartDate = m.StartDate,
-                EndDate = m.EndDate,
-                Description = m.Description,
-                DocumentPath = m.DocumentPath,
-                IsCancelled = m.IsCancelled,
-                CancelledAt = m.CancelledAt
-            })
             .FirstOrDefaultAsync();
 
         if (meeting == null)

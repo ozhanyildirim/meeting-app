@@ -3,10 +3,11 @@ using MeetingApp.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using Swashbuckle.AspNetCore.Annotations;
 
 [Authorize]
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/meeting")]
 public class MeetingController : ControllerBase
 {
     private readonly IMeetingService _meetingService;
@@ -16,12 +17,17 @@ public class MeetingController : ControllerBase
         _meetingService = meetingService;
     }
 
-    // Token'dan userId'yi al
     private int GetUserId() =>
         int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
+    /// <summary>Get all meetings</summary>
     [HttpGet]
-    public async Task<IActionResult> GetAll()
+    [SwaggerOperation(
+        Summary = "Get all meetings",
+        Description = "Returns all non-cancelled meetings for the authenticated user")]
+    [SwaggerResponse(200, "Success", typeof(List<MeetingResponse>))]
+    [SwaggerResponse(401, "Unauthorized")]
+    public async Task<ActionResult<List<MeetingResponse>>> GetAll()
     {
         try
         {
@@ -34,8 +40,16 @@ public class MeetingController : ControllerBase
         }
     }
 
+    /// <summary>Get meeting by id</summary>
     [HttpGet("{id}")]
-    public async Task<IActionResult> GetById(int id)
+    [SwaggerOperation(
+        Summary = "Get meeting by id",
+        Description = "Returns meeting details including document for the given id")]
+    [SwaggerResponse(200, "Success", typeof(Meeting))]
+    [SwaggerResponse(404, "Meeting not found")]
+    [SwaggerResponse(401, "Unauthorized")]
+    public async Task<ActionResult<Meeting>> GetById(
+        [SwaggerParameter(Description = "The unique identifier of the meeting", Required = true)] int id)
     {
         try
         {
@@ -48,8 +62,16 @@ public class MeetingController : ControllerBase
         }
     }
 
+    /// <summary>Create a new meeting</summary>
     [HttpPost]
-    public async Task<IActionResult> Create([FromBody] MeetingDto dto)
+    [SwaggerOperation(
+        Summary = "Create a new meeting",
+        Description = "Creates a new meeting. An optional document can be uploaded as base64")]
+    [SwaggerResponse(200, "Meeting created successfully", typeof(MeetingResponse))]
+    [SwaggerResponse(400, "Invalid request")]
+    [SwaggerResponse(401, "Unauthorized")]
+    public async Task<ActionResult<MeetingResponse>> Create(
+        [FromBody, SwaggerRequestBody(Description = "Meeting details", Required = true)] MeetingDto dto)
     {
         try
         {
@@ -62,8 +84,17 @@ public class MeetingController : ControllerBase
         }
     }
 
+    /// <summary>Update a meeting</summary>
     [HttpPut("{id}")]
-    public async Task<IActionResult> Update(int id, [FromBody] MeetingDto dto)
+    [SwaggerOperation(
+        Summary = "Update a meeting",
+        Description = "Updates an existing meeting. A new document can be uploaded as base64")]
+    [SwaggerResponse(200, "Meeting updated successfully", typeof(MeetingResponse))]
+    [SwaggerResponse(400, "Invalid request or meeting is already cancelled")]
+    [SwaggerResponse(401, "Unauthorized")]
+    public async Task<ActionResult<MeetingResponse>> Update(
+        [SwaggerParameter(Description = "The unique identifier of the meeting to update", Required = true)] int id,
+        [FromBody, SwaggerRequestBody(Description = "Updated meeting details", Required = true)] MeetingDto dto)
     {
         try
         {
@@ -76,13 +107,21 @@ public class MeetingController : ControllerBase
         }
     }
 
+    /// <summary>Delete a meeting</summary>
     [HttpDelete("{id}")]
-    public async Task<IActionResult> Delete(int id)
+    [SwaggerOperation(
+        Summary = "Delete a meeting",
+        Description = "Permanently deletes a meeting. The deletion is logged in the MeetingDeleteLogs table via trigger")]
+    [SwaggerResponse(200, "Meeting deleted successfully")]
+    [SwaggerResponse(400, "Meeting not found")]
+    [SwaggerResponse(401, "Unauthorized")]
+    public async Task<ActionResult<string>> Delete(
+        [SwaggerParameter(Description = "The unique identifier of the meeting to delete", Required = true)] int id)
     {
         try
         {
             await _meetingService.DeleteAsync(id, GetUserId());
-            return Ok("Toplantı silindi");
+            return Ok("Meeting deleted successfully");
         }
         catch (Exception ex)
         {
@@ -90,13 +129,21 @@ public class MeetingController : ControllerBase
         }
     }
 
+    /// <summary>Cancel a meeting</summary>
     [HttpPut("{id}/cancel")]
-    public async Task<IActionResult> Cancel(int id)
+    [SwaggerOperation(
+        Summary = "Cancel a meeting",
+        Description = "Marks a meeting as cancelled. Cancelled meetings are permanently deleted by Hangfire job periodically")]
+    [SwaggerResponse(200, "Meeting cancelled successfully")]
+    [SwaggerResponse(400, "Meeting not found or already cancelled")]
+    [SwaggerResponse(401, "Unauthorized")]
+    public async Task<ActionResult<string>> Cancel(
+        [SwaggerParameter(Description = "The unique identifier of the meeting to cancel", Required = true)] int id)
     {
         try
         {
             await _meetingService.CancelAsync(id, GetUserId());
-            return Ok("Toplantı iptal edildi");
+            return Ok("Meeting cancelled successfully");
         }
         catch (Exception ex)
         {

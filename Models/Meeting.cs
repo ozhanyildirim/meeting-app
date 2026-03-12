@@ -7,11 +7,12 @@
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
         public string? Description { get; set; }
-        public string? DocumentPath { get; set; }
         public bool IsCancelled { get; set; } = false;
         public DateTime? CancelledAt { get; set; }
         public int UserId { get; set; }
         public User User { get; set; }
+        public Document? Document { get; set; }
+
     }
 
     public class MeetingResponse
@@ -21,9 +22,9 @@
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
         public string? Description { get; set; }
-        public string? DocumentPath { get; set; }
         public bool IsCancelled { get; set; }
         public DateTime? CancelledAt { get; set; }
+        public DocumentResponseDto? Document { get; set; }
     }
 
 }
