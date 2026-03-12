@@ -13,7 +13,7 @@ public class MeetingCleanupService
     public async Task DeleteCancelledMeetingsAsync()
     {
         // İptal edilmiş ve üzerinden 24 saat geçmiş toplantıları sil
-        var cutoff = DateTime.UtcNow.AddMinutes(-1); // 1 dakika önce iptal edilenleri sil
+        var cutoff = DateTime.UtcNow.AddMinutes(-10); // 1 dakika önce iptal edilenleri sil
 
        // var cutoff = DateTime.UtcNow.AddHours(-24);
 

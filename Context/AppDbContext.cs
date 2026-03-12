@@ -10,7 +10,6 @@ namespace MeetingApp.Context
 
         public DbSet<User> Users => Set<User>();
         public DbSet<Meeting> Meetings => Set<Meeting>();
-
         public DbSet<Document> Documents => Set<Document>();
 
         protected override void OnModelCreating(ModelBuilder builder)

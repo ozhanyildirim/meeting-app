@@ -5,7 +5,7 @@ services:
       dockerfile: Dockerfile
     restart: on-failure
     ports:
-      - "5000:8080"
+      - "7119:8080"
       - "5001:443"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
@@ -21,7 +21,6 @@ services:
     depends_on:
       sqlserver:
         condition: service_healthy
-
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest
     restart: always
@@ -38,6 +37,5 @@ services:
       timeout: 5s
       retries: 10
       start_period: 30s
-
 volumes:
   sqldata:

@@ -7,7 +7,7 @@ using Swashbuckle.AspNetCore.Annotations;
 
 [Authorize]
 [ApiController]
-[Route("api/meeting")]
+[Route("api/meetings")]
 public class MeetingController : ControllerBase
 {
     private readonly IMeetingService _meetingService;
@@ -115,39 +115,23 @@ public class MeetingController : ControllerBase
     [SwaggerResponse(200, "Meeting deleted successfully")]
     [SwaggerResponse(400, "Meeting not found")]
     [SwaggerResponse(401, "Unauthorized")]
-    public async Task<ActionResult<string>> Delete(
+    public async Task Delete(
         [SwaggerParameter(Description = "The unique identifier of the meeting to delete", Required = true)] int id)
     {
-        try
-        {
             await _meetingService.DeleteAsync(id, GetUserId());
-            return Ok("Meeting deleted successfully");
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(ex.Message);
-        }
     }
 
     /// <summary>Cancel a meeting</summary>
-    [HttpPut("{id}/cancel")]
+    [HttpPatch("{id}/cancel")]
     [SwaggerOperation(
         Summary = "Cancel a meeting",
         Description = "Marks a meeting as cancelled. Cancelled meetings are permanently deleted by Hangfire job periodically")]
     [SwaggerResponse(200, "Meeting cancelled successfully")]
     [SwaggerResponse(400, "Meeting not found or already cancelled")]
     [SwaggerResponse(401, "Unauthorized")]
-    public async Task<ActionResult<string>> Cancel(
+    public async Task Cancel(
         [SwaggerParameter(Description = "The unique identifier of the meeting to cancel", Required = true)] int id)
     {
-        try
-        {
             await _meetingService.CancelAsync(id, GetUserId());
-            return Ok("Meeting cancelled successfully");
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(ex.Message);
-        }
     }
 }

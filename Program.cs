@@ -78,6 +78,18 @@ builder.Services.AddHangfireServer();
 builder.Services.Configure<MailSettings>(
     builder.Configuration.GetSection("MailSettings"));
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAngular", policy =>
+    {
+        policy.WithOrigins("http://localhost:4200")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
+});
+
+
 
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -106,7 +118,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
+app.UseCors("AllowAngular");
 app.UseAuthentication(); // JWT AUTH
 
 app.UseAuthorization();
@@ -115,11 +127,10 @@ app.MapControllers();
 
 app.UseHangfireDashboard("/hangfire");
 
-// Her gece 02:00'de çalışır
-RecurringJob.AddOrUpdate<MeetingCleanupService>(
-    "delete-cancelled-meetings",
-    svc => svc.DeleteCancelledMeetingsAsync(),
-    "0 2 * * *");
+    RecurringJob.AddOrUpdate<MeetingCleanupService>(
+        "delete-cancelled-meetings",
+        svc => svc.DeleteCancelledMeetingsAsync(),
+        "0 2 * * *");
 
 
 app.Run();

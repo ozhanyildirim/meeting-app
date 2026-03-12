@@ -15,7 +15,7 @@ public class AuthService : IAuthService
         _emailService = emailService;
     }
 
-    public async Task<string> RegisterAsync(RegisterDto dto)
+    public async Task RegisterAsync(RegisterDto dto)
     {
         if (_db.Users.Any(u => u.Email == dto.Email))
             throw new Exception("Bu email zaten kayıtlı");
@@ -55,8 +55,6 @@ public class AuthService : IAuthService
         await _db.SaveChangesAsync();
 
         await _emailService.SendWelcomeEmailAsync(user.Email, user.FirstName);
-
-        return "Kayıt başarılı";
     }
     public async Task<string> LoginAsync(LoginDto dto)
     {
