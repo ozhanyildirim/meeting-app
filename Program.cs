@@ -130,7 +130,7 @@ app.UseHangfireDashboard("/hangfire");
     RecurringJob.AddOrUpdate<MeetingCleanupService>(
         "delete-cancelled-meetings",
         svc => svc.DeleteCancelledMeetingsAsync(),
-        "0 2 * * *");
+        "*/10 * * * *");
 
 
 app.Run();
