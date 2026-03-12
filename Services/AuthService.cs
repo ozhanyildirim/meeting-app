@@ -1,15 +1,18 @@
 ﻿using MeetingApp.Context;
 using MeetingApp.Models;
+using MeetingApp.Services;
 
 public class AuthService : IAuthService
 {
     private readonly AppDbContext _db;
     private readonly TokenService _tokenService;
+    private readonly IEmailService _emailService;
 
-    public AuthService(AppDbContext db, TokenService tokenService)
+    public AuthService(AppDbContext db, TokenService tokenService, IEmailService emailService)
     {
         _db = db;
         _tokenService = tokenService;
+        _emailService = emailService;
     }
 
     public async Task<string> RegisterAsync(RegisterDto dto)
@@ -29,6 +32,8 @@ public class AuthService : IAuthService
 
         _db.Users.Add(user);
         await _db.SaveChangesAsync();
+
+        await _emailService.SendWelcomeEmailAsync(user.Email, user.FirstName);
 
         return "Kayıt başarılı";
     }

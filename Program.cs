@@ -1,6 +1,7 @@
 using Hangfire;
 using Hangfire.MemoryStorage;
 using MeetingApp.Context;
+using MeetingApp.Models;
 using MeetingApp.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -64,10 +65,14 @@ builder.Services.AddHangfire(config =>
 
 builder.Services.AddHangfireServer();
 
+builder.Services.Configure<MailSettings>(
+    builder.Configuration.GetSection("MailSettings"));
+
 
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IMeetingService, MeetingService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<MeetingCleanupService>();
 
 
